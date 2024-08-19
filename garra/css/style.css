@@ -1,0 +1,42 @@
+body{
+    background-color: black;
+}
+
+.cuerpo{
+    width: 80%;
+    margin-left: 10%;
+    margin-right: 10%;
+    background-color: blue;
+    text-align: center;
+}
+
+.titulo{
+    width: 60%;
+}
+.texto{
+    color: white;
+    font-size: xx-large;
+}
+
+.boton{
+    width: 50%;
+    background-color: red;
+    color: white;
+    border-radius: 10px;
+    font-size: x-large;
+    margin-bottom: 50px;
+}
+
+.red{
+    color: red;
+}
+
+.green{
+    color: green;
+}
+
+.blue{
+    color: blue;
+}
+
+

@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SURFACE QR</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/cookie.js"type="text/javascript"></script>  
+</head>
+
+<body onload="cargaDatos()">
+    <div  class="cuerpo">
+        <img src="img/logo.jpg" alt="" srcset="" class="titulo">
+    
+        <div>
+            <button class="boton" onclick="connectSerial()">Inicializa GARRA</button>
+            <button id="agergaTokens" class="boton" onclick="agregaToken()" >Agrega TOKEN GRATIS</button>
+            <h1 id="" class="texto"> Número de tokens leidos mediante código QR: <b id="totalTokensRegaladosConQR"></b> </h1>
+            <br>
+            <h1 id="textoResultadoQR" class="texto">-Esperando Lector Qr-</h1>
+
+        </div>
+    </div>
+
+    <!-- <div id="elem" class="element"></div>-->
+    <script type="text/javascript">
+        //24 de Julio 2023
+        let yaConfiguramosSerial = false
+        var port, textEncoder, writableStreamClosed, writer;
+        let numPremios = 100
+        let numHorasServicio = 100
+        let horaArranque = '00:00'
+        let numCarriles = 1
+        let inventarioPremios = {
+            carril01: 0,
+            carril02: 0,
+            carril03: 0,
+            carril04: 0,
+            carril05: 0,
+            carril06: 0
+        }
+        let arrayGanadores = []
+        let arrayGanadoresRandom = []
+        /*
+        Yellowhat///Garra///230724///0001
+        Yellowhat///TEST///230724///0001
+
+        */
+        let maxQR = "toyoya_yh2024_000000".length
+        let strInput = ""
+        let index = 0
+        let idInvitado
+
+        function cargaDatos() {
+
+            //Leer desde Cookie los valores persistentes
+            if(!yaConfiguramosSerial){
+                document.getElementById("agergaTokens").style.visibility = "hidden";
+            }
+
+            numPremios = parseInt(getCookie("numPremios"))
+            numHorasServicio = parseInt(getCookie("numHorasServicio"))
+            horaArranque = getCookie("horaArranque")
+            numCarriles = parseInt(getCookie("numCarriles"))
+            inventarioPremios.carril01 = parseInt(getCookie("capacidadCarril1"))
+            inventarioPremios.carril02 = parseInt(getCookie("capacidadCarril2"))
+            inventarioPremios.carril03 = parseInt(getCookie("capacidadCarril3"))
+            inventarioPremios.carril04 = parseInt(getCookie("capacidadCarril4"))
+            inventarioPremios.carril05 = parseInt(getCookie("capacidadCarril5"))
+            inventarioPremios.carril06 = parseInt(getCookie("capacidadCarril6"))
+            arrayGanadores = getCookie("arrayGanadores").split(',');
+            arrayGanadoresRandom = getCookie("arrayGanadoresRandom").split(',');
+
+            creaEventosTeclado()
+        }
+
+
+        async function connectSerial() {
+
+            strInput = ""
+            console.log("entramos a conecct serial")
+            if ("serial" in navigator) {
+                try {
+
+                    const portsYaAutorizados = await navigator.serial.getPorts();
+                    if (portsYaAutorizados.length) {
+                        port = portsYaAutorizados[0];
+                        console.log("Ya autorizado");
+                    } else {
+                        console.log("Vamos a Preguntar de nuevo");
+                        const filters = [
+                        { usbVendorId: 0x2341, usbProductId: 0x0001 }
+                                
+                        //{ usbVendorId: 0x2341, usbProductId: 0x0042 }
+                            //     ,{ usbVendorId: 0x2341, usbProductId: 0x0001 }
+                        ];
+                        //port = await navigator.serial.requestPort({ filters });
+                        port = await navigator.serial.requestPort({  });
+                    }
+
+                    await port.open({ baudRate: "9600" });
+                    // const { usbProductId, usbVendorId } = port.getInfo();
+                    // console.log({usbProductId})
+                    // console.log({usbVendorId})
+                    listenToPort();
+
+                    textEncoder = new TextEncoderStream();
+                    writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+
+                    writer = textEncoder.writable.getWriter();
+                    //await sendCharacterNumber(49);
+                    // writer = port.writable.getWriter();
+                    // const data = new Uint8Array([49]);
+                    //document.getElementById("salir").innerHTML = "Entrega..."
+                    //setTimeout(sendCharacterNumber,2000)
+                    console.log("salimos de conect serial")
+                    yaConfiguramosSerial = true
+                    document.getElementById("agergaTokens").style.visibility = "visible";
+            } catch (err) {
+                    alert("Serial Connection Failed: " + err);
+                }
+            } else {
+                alert("API serial no soportada");
+            }
+            // }
+        }
+
+        async function sendCharacterNumber() {
+            console.log("entramos a send Character")
+            let carrilParaDespachar = 3;
+            // let aleatorios = []
+            // if (inventarioPremios.carril01 > 0){
+            //     aleatorios.push("carril01")
+            // }
+            //  if (inventarioPremios.carril02 > 0){
+            //     aleatorios.push("carril02")
+            // }
+            //  if (inventarioPremios.carril03 > 0){
+            //     aleatorios.push("carril03")
+            // }
+            //  if (inventarioPremios.carril04 > 0){
+            //     aleatorios.push("carril04")
+            // }
+            //  if (inventarioPremios.carril05 > 0){
+            //     aleatorios.push("carril05")
+            // }
+            //  if (inventarioPremios.carril06 > 0){
+            //     aleatorios.push("carril06")
+            // }
+
+            // const randomIndex = Math.floor(Math.random() * aleatorios.length);
+            // console.log({aleatorios})
+            // let seleccionado = aleatorios[randomIndex]
+            // console.log({seleccionado})
+
+
+            //  if (seleccionado == "carril01"){
+            //     carrilParaDespachar = 1
+            //     --inventarioPremios.carril01;
+            // }else if (seleccionado == "carril02"){
+            //     carrilParaDespachar = 2
+            //     --inventarioPremios.carril02;
+            // }else if (seleccionado == "carril03"){
+            //     carrilParaDespachar = 3
+            //     --inventarioPremios.carril03;
+            // }else if (seleccionado == "carril04"){
+            //     carrilParaDespachar = 4
+            //     --inventarioPremios.carril04;
+            // }else if (seleccionado == "carril05"){
+            //     carrilParaDespachar = 5
+            //     --inventarioPremios.carril05;
+            // }else if (seleccionado == "carril06"){
+            //     carrilParaDespachar = 6
+            //     --inventarioPremios.carril06;
+            // }
+            // console.log({carrilParaDespachar})
+
+
+            try {
+                await writer.write("" + carrilParaDespachar);
+            } catch (err) {
+                console.error("Mensaje: " + err)
+            }
+        }
+
+        function iniciaAnimacion() {
+            document.getElementById("element1").className = "element siVisible"
+            document.getElementById("element2").className = "element siVisible"
+            lottie1.play()
+            lottie2.play()
+        }
+
+        function detenAnimacion() {
+            document.getElementById("element1").className = "element noVisible"
+            document.getElementById("element2").className = "element noVisible"
+            lottie1.stop()
+            lottie2.stop()
+        }
+
+        function iniciaAnimacionFail() {
+            document.getElementById("element4").className = "element siVisible"
+            lottie4.play()
+        }
+
+        function detenAnimacionFail() {
+            document.getElementById("element4").className = "element noVisible"
+            lottie4.stop()
+        }
+
+        async function regresa() {
+            window.location.href = `ruleta.html`;
+        }
+
+        // const canvas = document.getElementById('myCanvas');
+        // const app = new PIXI.Application({
+        //     view: canvas,
+        //     width: 1080,
+        //     height: 1080,
+        //     backgroundColor : 0x06141F
+        //     // backgroundColor : 0x00ff00
+        // });
+
+        // let girando = false;
+
+        // // app.loader.add('boton', '/jpg/boton.webp')
+        // // Load the bunny texture
+        // app.loader.add('arrow', '/jpg/arrow.png')
+
+        // // Load the bunny texture
+        // app.loader.add('ruleta', '/jpg/ruleta2.png')
+        // .load(startup);
+
+        function startup() {
+            // var boton = new PIXI.Sprite(app.loader.resources.boton.texture);
+            // boton.anchor.set(0.5);
+            // boton.height = app.renderer.height/2;
+            // boton.width = boton.height;
+
+            // boton.x = app.renderer.width / 2;
+            // boton.y = app.renderer.height / 9;
+
+            var arrow = new PIXI.Sprite(app.loader.resources.arrow.texture);
+            arrow.anchor.set(0.5);
+
+            arrow.width = app.renderer.width / 10;
+            arrow.height = app.renderer.height / 10;
+            arrow.x = app.renderer.width / 2;
+
+            var ruleta = new PIXI.Sprite(app.loader.resources.ruleta.texture);
+
+            // Center the sprite's anchor point
+            ruleta.anchor.set(0.5);
+
+            // Move the sprite to the center of the screen
+            ruleta.height = app.renderer.height * .7;
+            ruleta.width = ruleta.height;
+
+            ruleta.x = app.renderer.width / 2;
+            ruleta.y = app.renderer.height * .65;
+
+            arrow.y = ruleta.y - ruleta.height / 2;
+
+            app.stage.addChild(ruleta);
+            app.stage.addChild(arrow);
+            // app.stage.addChild(boton);
+
+            // Listen for animate update
+            app.ticker.add(function (delta) {
+                if (girando) {
+                    ruleta.rotation += 0.1 * delta;
+                }
+            });
+
+            // boton.on('click', gira);
+            // boton.on('tap',  gira);
+            // boton.interactive = true;
+            // boton.buttonMode = true;
+
+        }
+
+        function gira() {
+            if (girando) {
+                girando = false;
+                //detenAnimacion()
+            } else {
+                girando = true
+                //iniciaAnimacion()
+            }
+        }
+
+
+        function addEvent(element, eventName, callback) {
+            if (element.addEventListener) {
+                element.addEventListener(eventName, callback, false);
+            } else if (element.attachEvent) {
+                element.attachEvent("on" + eventName, callback);
+            } else {
+                element["on" + eventName] = callback;
+            }
+        }
+
+        async function creaEventosTeclado() {
+            addEvent(document, "keypress", function (e) {
+                e = e || window.event;
+                console.log("**Leemos teclado**")
+                console.log({ strInput })
+                console.log({ index })
+                key = e.key
+                console.log({ key })
+                keyCode = e.keyCode
+                console.log({ keyCode })
+                // strInput += e.key
+                // index +=1
+                let largoCodigoQR = maxQR
+                if (e.keyCode == 13) {
+                    largoCodigoQR = strInput.length
+                }
+                if (e.keyCode == 188) {
+                    strInput = ""
+                    index = 0
+                }
+                excedeLargoCodigoQR = largoCodigoQR + 1
+                if (index < largoCodigoQR) {
+                    // if(e.keyCode == 34){
+                    //     console.log("alto")
+                    //     strInput += "@"
+                    // }else if(e.keyCode == 39){
+                    //     console.log("alto")
+                    //     strInput += "-"
+                    // }else if(e.keyCode == 63){
+                    //     console.log("alto")
+                    //     strInput += "_"
+                    // }else{
+                    strInput += e.key
+                    // }
+
+                    index += 1
+                } else if (index == largoCodigoQR) {
+                    console.log("**Entramos con: **")
+                    temp = strInput;
+                    idInvitado = temp
+                    console.log({ idInvitado })
+                    tenemosQR(idInvitado)
+                    index = 0
+                    strInput = ""
+                } else if (index > largoCodigoQR) {
+                    index = 0
+                    strInput = ""
+                }
+            });
+
+            document.addEventListener('paste', (event) => {
+                largoCodigoQR = maxQR
+                event.preventDefault();
+                nuevo = (event.clipboardData.getData('text/plain'));
+                paste = nuevo;
+                index = paste.length
+                let strLlenado = paste.toUpperCase()
+                if (index == (largoCodigoQR)) {
+                    index = 0
+                    strInput = ''
+                    idInvitado = paste
+                    tenemosQR(idInvitado)
+                } else if (strLlenado.toUpperCase() == "TEST") {
+                    idInvitado = paste
+                    tenemosQR(idInvitado)
+                }
+            });
+
+        }
+
+        // let numPremios = 100
+        // let numHorasServicio = 100
+        // let horaArranque = new Date()
+        // let numCarriles = 6
+        // let numPremiosXcarril = 6
+        
+        // el string de entrada toyota_yh2024_000000
+        async function tenemosQR(idInvitado) {
+            //Aqui verficiamos el segundo que es desde la hora de inciio y validamos en array
+            console.log({ idInvitado })
+
+            //Vamos a ver si es intruccion de llenado de vending
+            if (idInvitado.includes("_")) {
+                let instruccion = idInvitado.split("_")[0]
+                instruccion = instruccion.toUpperCase()
+                if (instruccion == "LLENADO") {
+                    console.log("entramos llenado")
+                    inventarioPremios.carril01 = parseInt(getCookie("capacidadMaximaCarril1"))
+                    inventarioPremios.carril02 = parseInt(getCookie("capacidadMaximaCarril2"))
+                    inventarioPremios.carril03 = parseInt(getCookie("capacidadMaximaCarril3"))
+                    inventarioPremios.carril04 = parseInt(getCookie("capacidadMaximaCarril4"))
+                    inventarioPremios.carril05 = parseInt(getCookie("capacidadMaximaCarril5"))
+                    inventarioPremios.carril06 = parseInt(getCookie("capacidadMaximaCarril6"))
+
+                    setCookie("capacidadCarril1", inventarioPremios.carril01, 0);
+                    setCookie("capacidadCarril2", inventarioPremios.carril02, 10);
+                    setCookie("capacidadCarril3", inventarioPremios.carril03, 10);
+                    setCookie("capacidadCarril4", inventarioPremios.carril04, 10);
+                    setCookie("capacidadCarril5", inventarioPremios.carril05, 10);
+                    setCookie("capacidadCarril6", inventarioPremios.carril06, 10);
+
+                } else if (instruccion == "TEST") { //ID PARA TEST
+                    sendCharacterNumber()
+                } else if (instruccion == "TOYOTA") { //ID valido
+                    // 
+                    let str = idInvitado.split("_")
+                    let strMarca = str[0]
+                    // let nombre = strNombre.substring(1, strNombre.length)
+                    let strYH = str[1]
+                    let strID = str[2]
+
+                    //Ver en BD si es la primera vez que juega
+                    let primeraVez = true
+                    let dataJson = {
+                        idUsuario: parseInt(strID)
+                    }
+                    //----------
+                    const settings = {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        body:
+                            JSON.stringify(dataJson)
+                    };
+                    // VALIDACION POR API DE 1er USO
+                    /*
+                    try {
+                        const fetchResponse = await fetch(`http://localhost:4000/garra/guardaIdParticipante`, settings);
+                        const data = await fetchResponse.json();
+                        let resul = data.statusCode
+                        //let resul = 200;
+                        if (resul == 200) {
+                            console.log("Datos guardados correctamente")
+                            primeraVez = true
+                        } else {
+                            console.log("Error: " + data.message);
+                            primeraVez = false
+                        }
+                    }catch (e) {
+                        console.log("Error:" + e);
+                    }
+                    */
+
+                    /* LOGICA DE ENTREGA DE PREMIOS MEDIANTE HORARIOS Y NUMERO DE PREMIOS
+
+                    let horaDeArranqueActivacion = new Date()
+                    horaDeArranqueActivacion.setHours(parseInt(horaArranque.split(":")[0] ))
+                    horaDeArranqueActivacion.setMinutes(parseInt(horaArranque.split(":")[1]))
+                    horaDeArranqueActivacion.setSeconds(0)
+
+                    let horaActualActivacion = new Date() 
+                    console.log({horaActualActivacion})
+                    let segmentoDeJuego = (horaActualActivacion - horaDeArranqueActivacion) / 1000
+                    console.log({segmentoDeJuego})
+
+                    if(segmentoDeJuego < 0){
+                        primeraVez = true 
+                    }
+                    
+                    */
+                    if (primeraVez) {
+                        sendCharacterNumber()
+                        inventarioPremios.carril01++
+                        setCookie("capacidadCarril1", inventarioPremios.carril01, inventarioPremios.carril01);
+                        document.getElementById("totalTokensRegaladosConQR").innerHTML = inventarioPremios.carril01
+                        document.getElementById("textoResultadoQR").innerHTML = "CODIGO QR VALIDO"
+                        document.getElementById("textoResultadoQR").className = "green"
+                    } else {
+                        document.getElementById("textoResultadoQR").innerHTML = "CODIGO QR YA UTILIZADO"
+                        document.getElementById("textoResultadoQR").className = "red"
+
+                    }
+
+
+                    /* Aqui es la logica de animaciones y validaciones
+                    if(primeraVez){
+                        document.getElementById("imagen").src = "jpg/2.jpg"
+                        document.getElementById("divRuleta").className = "cuerpo element siVisible"
+
+                        //document.getElementById("nombre").innerHTML = nombre
+                        document.getElementById("element3").className = "element siVisible"
+                        lottie3.play()
+                        setTimeout(() => {
+                            
+                            document.getElementById("element3").className = "element noVisible"
+                            lottie3.stop()    
+                            gira()
+                            setTimeout(() => {                                
+                                gira()
+                                let resul = evaluamosSiGana()
+                                
+                                if(resul){
+                                    sendCharacterNumber()
+                                    setCookie("capacidadCarril1", inventarioPremios.carril01, 10);
+                                    setCookie("capacidadCarril2", inventarioPremios.carril02, 10);
+                                    setCookie("capacidadCarril3", inventarioPremios.carril03, 10);
+                                    setCookie("capacidadCarril4", inventarioPremios.carril04, 10);
+                                    setCookie("capacidadCarril5", inventarioPremios.carril05, 10);
+                                    setCookie("capacidadCarril6", inventarioPremios.carril06, 10);
+                    
+                                    document.getElementById("imagen").src = "jpg/3.jpg"
+                                    document.getElementById("divRuleta").className = "cuerpo element noVisible"
+                                    
+                                    iniciaAnimacion()
+                                    setTimeout(() => {
+                                        detenAnimacion()
+                                        document.getElementById("imagen").src = "jpg/1.jpg"
+                                        }, 7000);
+                                }else{
+                                    document.getElementById("imagen").src = "jpg/4.jpg"
+                                    document.getElementById("divRuleta").className = "cuerpo element noVisible"
+                                    
+                                    iniciaAnimacionFail()
+                                    setTimeout(() => {
+                                        detenAnimacionFail()
+                                        document.getElementById("imagen").src = "jpg/1.jpg"
+                                    }, 4000);
+                                }
+                            }, 4000);
+                        }, 3000);
+                        
+                    }else{
+                        document.getElementById("imagen").src = "jpg/5.jpg"
+                        setTimeout(() => {
+                            document.getElementById("imagen").src = "jpg/1.jpg"
+                        }, 3000);
+                    }
+                    */  //HASTA AQUi acaBA LA LOGICA
+                } else {
+                    // document.getElementById("imagen").src = "jpg/5.jpg"
+                    // setTimeout(() => {
+                    //     document.getElementById("imagen").src = "jpg/1.jpg"
+                    // }, 3000);
+                    document.getElementById("textoResultadoQR").innerHTML = "CODIGO QR INVALIDO"
+                    document.getElementById("textoResultadoQR").className = "blue"
+                }
+            }
+        }
+
+        function agregaToken(){
+            sendCharacterNumber()
+        }
+
+        function evaluamosSiGana() {
+            let horaDeArranqueActivacion = new Date()
+            horaDeArranqueActivacion.setHours(parseInt(horaArranque.split(":")[0]))
+            horaDeArranqueActivacion.setMinutes(parseInt(horaArranque.split(":")[1]))
+            horaDeArranqueActivacion.setSeconds(0)
+
+            let horaActualActivacion = new Date()
+            console.log({ horaActualActivacion })
+            let segmentoDeJuego = (horaActualActivacion - horaDeArranqueActivacion) / 1000
+            console.log({ segmentoDeJuego })
+
+            if (segmentoDeJuego >= 0) {
+                let duracionSegmento = numHorasServicio / numPremios
+                console.log({ duracionSegmento })
+
+                //let segmentoActual =  (segmentoDeJuego/1000) % (duracionSegmento*60)
+                let segmentoActual = Math.floor((segmentoDeJuego) / (duracionSegmento * 60))
+                console.log({ segmentoActual })
+
+                if (segmentoActual >=numPremios) {
+                    console.log("no hay premio ya nos pasamos segmentoActual > numPremios")
+                    return false
+                } else {
+                    let ganadoresDeSegmentoAnterior = false
+                    let ganadoresDeSegmentoActual = false
+
+                    if (segmentoActual == 0) {
+                        ganadoresDeSegmentoActual = arrayGanadores[segmentoActual]
+                        ganadoresDeSegmentoAnterior = "true"
+                    } else {
+                        ganadoresDeSegmentoActual = arrayGanadores[segmentoActual]
+                        ganadoresDeSegmentoAnterior = arrayGanadores[segmentoActual - 1]
+                    }
+
+                    if (ganadoresDeSegmentoAnterior == "false") {
+                        console.log("SI hay premio, ganadoresDeSegmentoAnterior==0")
+                        arrayGanadores[segmentoActual - 1] = "true"
+                        setCookie("arrayGanadores", arrayGanadores.toString(), 10)
+                        return true
+                    } else {
+                        if (ganadoresDeSegmentoActual == "true") {
+                            console.log("NO hay premio, ganadoresDeSegmentoActual==1")
+                            return false
+                        } else {
+                            let segundoActualDentroDeSegmento = (segmentoDeJuego) % (duracionSegmento * 60)
+                            console.log({ segundoActualDentroDeSegmento })
+                            console.log("comparamos contra: " + arrayGanadoresRandom[segmentoActual])
+                            console.log("todos los aleatorios: " + arrayGanadoresRandom.toString())
+                            if (segundoActualDentroDeSegmento >= arrayGanadoresRandom[segmentoActual]) {
+                                console.log("SI hay premio, segmentoDeJuego >= arrayGanadoresRandom[segmentoActual]")
+                                arrayGanadores[segmentoActual] = "true"
+                                setCookie("arrayGanadores", arrayGanadores.toString(), 10)
+                                return true
+                            } else {
+                                console.log("NO hay premio, estamos en semento correcto pero todavia el aleatorio no nos toca")
+                                return false
+                            }
+                        }
+                    }
+                }
+            } else {
+                console.log("SI hay premio, estamos en pruebas antes del arranque")
+                return true
+            }
+
+        }
+
+        async function listenToPort() {
+            const textDecoder = new TextDecoderStream();
+            const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+            const reader = textDecoder.readable.getReader();
+            console.log("Vamos a escuchar el serial tambien")
+            let str = ""
+            // Listen to data coming from the serial device.
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) {
+                    //Allow the serial port to be closed later.
+                    reader.releaseLock();
+                    console.log("Serial: " + str);
+                    str = "";
+                    break;
+                }
+                // value is a string.
+                str = str + value
+            }
+        }
+    </script>
+</body>
+
+</html>

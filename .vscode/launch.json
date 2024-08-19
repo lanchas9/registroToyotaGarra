@@ -7,9 +7,15 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Open index.html",
+            "name": "registro",
             "webRoot": "${workspaceFolder}",
             "url": "http://localhost:8880/yellowhat/proyectos/registroToyotaGarra/index.html"
+        },{
+            "type": "chrome",
+            "request": "launch",
+            "name": "Garra",
+            "webRoot": "${workspaceFolder}",
+            "url": "http://localhost:8880/yellowhat/proyectos/registroToyotaGarra/garra/index.html"
         }
     ]
 }
