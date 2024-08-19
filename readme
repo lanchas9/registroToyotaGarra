@@ -6,3 +6,6 @@ ademas se genera una pagina que lee texto desde un QR reader via USB como teclad
 //TODO: pagina index.html que lea de QR como teclado y que valide que el QR inicie con "toyoya_yh2024_" y despues UUID
 //TODO: fastify local que guarde en "codigosQrUsados.txt" los codigos ya usados
 //TODO: fastify local que por serial mande un "1" para que se active la garra
+
+//TODO: probar con lectores de QR USB
+//TODO: crear el programa de arduino que reciba el "1" y active la garra
