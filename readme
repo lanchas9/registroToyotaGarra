@@ -1,3 +1,7 @@
+APP de registro para Toyota que valida y guarda datos en Mosaico.app
+con el registro exitoso genera un código QR que se presenta en pantalla
+ademas se genera una pagina que lee texto desde un QR reader via USB como teclado y manda señal USB para activar la garra
+
 //TODO: fastify en mosaico.app con guardado a mysql de un registro WEB
 //TODO: pagina index.html que lea de QR como teclado y que valide que el QR inicie con "toyoya_yh2024_" y despues UUID
 //TODO: fastify local que guarde en "codigosQrUsados.txt" los codigos ya usados
