@@ -1,0 +1,4 @@
+//TODO: fastify en mosaico.app con guardado a mysql de un registro WEB
+//TODO: pagina index.html que lea de QR como teclado y que valide que el QR inicie con "toyoya_yh2024_" y despues UUID
+//TODO: fastify local que guarde en "codigosQrUsados.txt" los codigos ya usados
+//TODO: fastify local que por serial mande un "1" para que se active la garra
