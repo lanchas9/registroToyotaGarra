@@ -1,6 +1,6 @@
 int input = 0;      // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
-int monedero = 11;
+int monedero = 8;
 int led = 12;
 
 void setup() {
@@ -8,7 +8,7 @@ void setup() {
   pinMode(monedero, OUTPUT);
   pinMode(led, OUTPUT);
   Serial.begin(9600);
-}
+} 
 
 
 //AQUI MANDAMOS A HUGH EL PIN QUE MANDA LA SEÑAL Y 1 SEGUNDO DESPUES LO MANDAMOS A LOW

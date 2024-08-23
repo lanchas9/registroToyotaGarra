@@ -15,8 +15,8 @@
         <img src="img/logo.jpg" alt="" srcset="" class="titulo">
     
         <div>
-            <button class="boton" onclick="connectSerial()">Inicializa GARRA</button>
-            <button id="agergaTokens" class="boton" onclick="agregaToken()" >Agrega TOKEN GRATIS</button>
+            <div class="boton" onclick="connectSerial()">Inicializa GARRA</div>
+            <div id="agergaTokens" class="boton" onclick="agregaToken()" >Agrega TOKEN GRATIS</div>
             <h1 id="" class="texto"> Número de tokens leidos mediante código QR: <b id="totalTokensRegaladosConQR"></b> </h1>
             <br>
             <h1 id="textoResultadoQR" class="texto">-Esperando Lector Qr-</h1>
@@ -43,12 +43,13 @@
         }
         let arrayGanadores = []
         let arrayGanadoresRandom = []
+        let arrayQRusados = []
         /*
         Yellowhat///Garra///230724///0001
         Yellowhat///TEST///230724///0001
 
         */
-        let maxQR = "toyoya_yh2024_000000".length
+        let maxQR = "toyoya?yh2024?000000".length
         let strInput = ""
         let index = 0
         let idInvitado
@@ -65,11 +66,35 @@
             horaArranque = getCookie("horaArranque")
             numCarriles = parseInt(getCookie("numCarriles"))
             inventarioPremios.carril01 = parseInt(getCookie("capacidadCarril1"))
+            if (isNaN(inventarioPremios.carril01)){
+                inventarioPremios.carril01 = 0
+                setCookie("capacidadCarril1",0)
+            }
             inventarioPremios.carril02 = parseInt(getCookie("capacidadCarril2"))
+            if (isNaN(inventarioPremios.carril02)){
+                inventarioPremios.carril02 = 0
+                setCookie("capacidadCarril2",0)
+            }
             inventarioPremios.carril03 = parseInt(getCookie("capacidadCarril3"))
+            if (isNaN(inventarioPremios.carril03)){
+                inventarioPremios.carril03 = 0
+                setCookie("capacidadCarril3",0)
+            }
             inventarioPremios.carril04 = parseInt(getCookie("capacidadCarril4"))
+            if (isNaN(inventarioPremios.carril04)){
+                inventarioPremios.carril04 = 0
+                setCookie("capacidadCarril4",0)
+            }
             inventarioPremios.carril05 = parseInt(getCookie("capacidadCarril5"))
+            if (isNaN(inventarioPremios.carril05)){
+                inventarioPremios.carril05 = 0
+                setCookie("capacidadCarril5",0)
+            }
             inventarioPremios.carril06 = parseInt(getCookie("capacidadCarril6"))
+            if (isNaN(inventarioPremios.carril04)){
+                inventarioPremios.carril04 = 0
+                setCookie("capacidadCarril4",0)
+            }
             arrayGanadores = getCookie("arrayGanadores").split(',');
             arrayGanadoresRandom = getCookie("arrayGanadoresRandom").split(',');
 
@@ -383,8 +408,8 @@
             console.log({ idInvitado })
 
             //Vamos a ver si es intruccion de llenado de vending
-            if (idInvitado.includes("_")) {
-                let instruccion = idInvitado.split("_")[0]
+            if (idInvitado.includes("?")) {
+                let instruccion = idInvitado.split("?")[0]
                 instruccion = instruccion.toUpperCase()
                 if (instruccion == "LLENADO") {
                     console.log("entramos llenado")
@@ -404,9 +429,15 @@
 
                 } else if (instruccion == "TEST") { //ID PARA TEST
                     sendCharacterNumber()
+                } else if (instruccion == "DEFAULT") { //ID PARA TEST
+                    document.getElementById("textoResultadoQR").className = "white"
+                    arrayQRusados = []
+                    inventarioPremios.carril01 = 0
+                    setCookie("capacidadCarril1", inventarioPremios.carril01, 0);
+                    document.getElementById("totalTokensRegaladosConQR").innerHTML = inventarioPremios.carril01 
                 } else if (instruccion == "TOYOTA") { //ID valido
                     // 
-                    let str = idInvitado.split("_")
+                    let str = idInvitado.split("?")
                     let strMarca = str[0]
                     // let nombre = strNombre.substring(1, strNombre.length)
                     let strYH = str[1]
@@ -463,6 +494,13 @@
                     }
                     
                     */
+                    if(arrayQRusados.includes(strID)){
+                        primeraVez = false
+                    }else{
+                        primeraVez = true
+                        arrayQRusados.push(strID)
+                    }
+                    
                     if (primeraVez) {
                         sendCharacterNumber()
                         inventarioPremios.carril01++
